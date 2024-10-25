@@ -1,4 +1,4 @@
-# dogbolt CLI
+# dogbolt CLI in Python
 
 upload an executable binary file to dogbolt.org  
 and download all decompiled source files to src/
