@@ -24,7 +24,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dogbolt-cli"
-version = "0.1.1"
+version = "0.1.2"
 description = "A CLI for Dogbolt. Uploads your binary and downloads decompiled source code."
 authors = [
     { name = "itachichrist", email = "itachichrist@gmail.com" },

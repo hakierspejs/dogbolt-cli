@@ -82,6 +82,7 @@ def download_result(
     done_decompiler_keys,
     request_count_by_decompiler_key,
     binary_id,
+    output_path,
 ):
     decompiler_name = result["decompiler"]["name"]
     decompiler_version = result["decompiler"]["version"]
@@ -95,10 +96,8 @@ def download_result(
 
     output_extension = "cpp" if decompiler_name == "snowman" else "c"
     output_path = os.path.join(
-        os.path.dirname(file_path),
-        "src",
-        f"{decompiler_name}-{decompiler_version}",
-        f"{os.path.basename(file_path).rsplit('.', 1)[0]}.{output_extension}",
+        output_path,
+        f"{decompiler_name}.{output_extension}"
     )
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
@@ -125,10 +124,13 @@ def download_result(
         return
     elif error:
         L.error("Decompilation failed for: "
-                f"{decompiler_name}-{decompiler_version}")
+                f"{decompiler_name}-{decompiler_version}: {error}")
         if WRITE_ERROR_TXT:
             with open(
-                os.path.join(os.path.dirname(output_path), "error.txt"),
+                os.path.join(
+                    os.path.dirname(output_path),
+                    f"{decompiler_name}-{decompiler_version}-error.txt",
+                ),
                 "w",
             ) as f:
                 f.write(error)
@@ -143,7 +145,7 @@ def download_result(
     done_decompiler_keys.add(decompiler_key)
 
 
-def dogbolt_decompile(file_path):
+def dogbolt_decompile(file_path, output_path=None):
     if not file_path or not os.path.isfile(file_path):
         L.error("Please provide a valid path to the file.")
         exit(1)
@@ -164,6 +166,9 @@ def dogbolt_decompile(file_path):
     done_decompiler_keys = set()
     request_count_by_decompiler_key = {}
 
+    if output_path is None:
+        output_path = os.path.join(os.path.dirname(file_path), "src")
+
     for _retry_step in range(RETRY_COUNT):
         L.info("fetching results...")
         response = requests.get(
@@ -180,6 +185,7 @@ def dogbolt_decompile(file_path):
                 done_decompiler_keys,
                 request_count_by_decompiler_key,
                 binary_id,
+                output_path,
             )
 
         if len(done_decompiler_keys) == decompilers_count:
@@ -198,7 +204,10 @@ def dogbolt_decompile(file_path):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--file-path", type=str, help="Path to the file", required=True
+        "-f", "--file-path", type=str, help="Path to the file", required=True
+    )
+    parser.add_argument(
+        "-o", "--output-path", type=str, help="Base path to save the results",
     )
     return parser.parse_args().__dict__
 
