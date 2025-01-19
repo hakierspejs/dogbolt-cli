@@ -1,0 +1,18 @@
+[tool.ruff]
+line-length = 79  # Enforce line length
+lint.select = [
+    "E",  # Pycodestyle errors like indentation
+    "F",  # Pyflakes errors for undefined names
+    "W",  # Pycodestyle warnings
+    "C",  # McCabe complexity
+    "T",  # toml rules
+    "N",  # Logging and string interpolation
+    "B",  # Bugbear rules for code that can be simplified
+    "Q",  # Quiz part of Ruff
+    # Add other rule codes you want to enable
+]
+
+lint.ignore = [
+    #  N812 Lowercase `logging` imported as non-lowercase `L`. also, typing:
+    "N812"
+]

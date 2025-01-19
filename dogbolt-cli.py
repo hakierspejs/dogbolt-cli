@@ -21,7 +21,7 @@ DECOMPILER_NAMES = {
     "Reko": "reko",
     "Relyze": "relyze",
     "RetDec": "retdec",
-    "Snowman": "snowman"
+    "Snowman": "snowman",
 }
 
 
@@ -63,7 +63,10 @@ def main(file_path):
 
     if not binary_id:
         print("Uploading binary...")
-        response = requests.post("https://dogbolt.org/api/binaries/", files={"file": open(file_path, "rb")})
+        response = requests.post(
+            "https://dogbolt.org/api/binaries/",
+            files={"file": open(file_path, "rb")},
+        )
         binary_id = response.json().get("id")
         with open(binary_id_cache_path, "a") as f:
             f.write(f"sha256:{file_sha256} {binary_id}\n")
@@ -72,7 +75,11 @@ def main(file_path):
 
     print("fetching decompiler names")
     response = requests.get("https://dogbolt.org/")
-    decompilers_json = json.loads(response.text.split('<script id="decompilers_json" type="application/json">')[1].split("</script>")[0])
+    decompilers_json = json.loads(
+        response.text.split(
+            '<script id="decompilers_json" type="application/json">'
+        )[1].split("</script>")[0]
+    )
     decompilers_names = list(decompilers_json.keys())
     decompilers_count = len(decompilers_names)
     print(f"decompiler names: {', '.join(decompilers_names)}")
@@ -82,7 +89,9 @@ def main(file_path):
 
     for retry_step in range(RETRY_COUNT):
         print("fetching results...")
-        response = requests.get(f"https://dogbolt.org/api/binaries/{binary_id}/decompilations/?completed=true")
+        response = requests.get(
+            f"https://dogbolt.org/api/binaries/{binary_id}/decompilations/?completed=true"
+        )
         status_json = response.json()
         count = status_json["count"]
 
@@ -97,23 +106,44 @@ def main(file_path):
             if USE_DECOMPILER_NAME_MAP and decompiler_name in DECOMPILER_NAMES:
                 decompiler_name = DECOMPILER_NAMES[decompiler_name]
 
-            output_extension = "c" if decompiler_name != "snowman" else CPP_FILE_EXTENSION
-            output_path = os.path.join(os.path.dirname(file_path), "src", f"{decompiler_name}-{decompiler_version}", f"{os.path.basename(file_path).rsplit('.', 1)[0]}.{output_extension}")
+            output_extension = (
+                "c" if decompiler_name != "snowman" else CPP_FILE_EXTENSION
+            )
+            output_path = os.path.join(
+                os.path.dirname(file_path),
+                "src",
+                f"{decompiler_name}-{decompiler_version}",
+                f"{os.path.basename(file_path).rsplit('.', 1)[0]}.{output_extension}",
+            )
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
             error = result.get("error")
             if error == "Exceeded time limit":
-                if request_count_by_decompiler_key.get(decompiler_key, 0) >= REQUESTS_PER_DECOMPILER:
+                if (
+                    request_count_by_decompiler_key.get(decompiler_key, 0)
+                    >= REQUESTS_PER_DECOMPILER
+                ):
                     print(f"error: timeout from decompiler {decompiler_key}")
                     continue
-                request_count_by_decompiler_key[decompiler_key] = request_count_by_decompiler_key.get(decompiler_key, 0) + 1
-                print(f"error: timeout from decompiler {decompiler_key} - retrying (done {request_count_by_decompiler_key[decompiler_key]} of {REQUESTS_PER_DECOMPILER} requests)")
-                rerun_response = requests.post(f"https://dogbolt.org/api/binaries/{binary_id}/decompilations/{result['id']}/rerun/")
+                request_count_by_decompiler_key[decompiler_key] = (
+                    request_count_by_decompiler_key.get(decompiler_key, 0) + 1
+                )
+                print(
+                    f"error: timeout from decompiler {decompiler_key} - retrying (done {request_count_by_decompiler_key[decompiler_key]} of {REQUESTS_PER_DECOMPILER} requests)"
+                )
+                rerun_response = requests.post(
+                    f"https://dogbolt.org/api/binaries/{binary_id}/decompilations/{result['id']}/rerun/"
+                )
                 continue
             elif error:
                 print(f"error: {decompiler_name}-{decompiler_version}")
                 if WRITE_ERROR_TXT:
-                    with open(os.path.join(os.path.dirname(output_path), "error.txt"), "w") as f:
+                    with open(
+                        os.path.join(
+                            os.path.dirname(output_path), "error.txt"
+                        ),
+                        "w",
+                    ) as f:
                         f.write(error)
                 done_decompiler_keys.add(decompiler_key)
                 continue
@@ -129,7 +159,9 @@ def main(file_path):
             print("fetched all results")
             break
 
-        print(f"fetched {len(done_decompiler_keys)} of {decompilers_count} results. retrying in {RETRY_SLEEP} seconds")
+        print(
+            f"fetched {len(done_decompiler_keys)} of {decompilers_count} results. retrying in {RETRY_SLEEP} seconds"
+        )
         time.sleep(RETRY_SLEEP)
 
     print("The process is complete.")
