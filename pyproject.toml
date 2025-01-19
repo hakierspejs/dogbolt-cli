@@ -16,3 +16,25 @@ lint.ignore = [
     #  N812 Lowercase `logging` imported as non-lowercase `L`. also, typing:
     "N812"
 ]
+
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dogbolt-cli"
+version = "0.1.0"
+description = "A CLI for Dogbolt. Uploads your binary and downloads decompiled source code."
+authors = [
+    { name = "Jacek Wielemborek", email = "gh@d33.pl" },
+    { name = "itachichrist", email = "itachichrist@gmail.com" }
+]
+license = {text = "MIT"}
+readme = "README.md"
+dependencies = [
+    "requests"
+]
+
+[project.scripts]
+db = "dogbolt_cli:main"

@@ -148,7 +148,7 @@ def download_result(
     done_decompiler_keys.add(decompiler_key)
 
 
-def main(file_path):
+def dogbolt_decompile(file_path):
     if not file_path or not os.path.isfile(file_path):
         log("Error: Please provide a valid path to the file")
         exit(1)
@@ -208,6 +208,9 @@ def parse_args():
     return parser.parse_args().__dict__
 
 
-if __name__ == "__main__":
+def main():
     logging.basicConfig(level=logging.INFO)
-    main(**parse_args())
+    dogbolt_decompile(**parse_args())
+
+if __name__ == "__main__":
+    main()
