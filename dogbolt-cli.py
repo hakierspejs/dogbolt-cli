@@ -3,7 +3,7 @@ import time
 import hashlib
 import requests
 import json
-import argparse
+import logging
 
 RETRY_SLEEP = 30
 RETRY_COUNT = 10
@@ -24,18 +24,20 @@ DECOMPILER_NAMES = {
     "Snowman": "snowman",
 }
 
+def log(msg):
+    logging.info(msg)
 
 def main(file_path):
     if not file_path or not os.path.isfile(file_path):
-        print("Error: Please provide a valid path to the file")
+        log("Error: Please provide a valid path to the file")
         exit(1)
 
-    print(f"binary path: {file_path}")
+    log(f"binary path: {file_path}")
 
     file_size = os.path.getsize(file_path)
-    print(f"binary size: {file_size}")
+    log(f"binary size: {file_size}")
     if file_size > 2 * 1024 * 1024:
-        print("error: binary is too large. binary must be smaller than 2 MB")
+        log("error: binary is too large. binary must be smaller than 2 MB")
         exit(1)
 
     def compute_sha256(file_path):
@@ -46,7 +48,7 @@ def main(file_path):
         return sha256.hexdigest()
 
     file_sha256 = compute_sha256(file_path)
-    print(f"binary hash: sha256:{file_sha256}")
+    log(f"binary hash: sha256:{file_sha256}")
 
     CACHE_DIR = os.path.expanduser("~/.cache/dogbolt/")
     binary_id_cache_path = os.path.join(CACHE_DIR, "binary_id.txt")
@@ -62,7 +64,7 @@ def main(file_path):
                     break
 
     if not binary_id:
-        print("Uploading binary...")
+        log("Uploading binary...")
         response = requests.post(
             "https://dogbolt.org/api/binaries/",
             files={"file": open(file_path, "rb")},
@@ -71,9 +73,9 @@ def main(file_path):
         with open(binary_id_cache_path, "a") as f:
             f.write(f"sha256:{file_sha256} {binary_id}\n")
 
-    print(f"binary id: {binary_id}")
+    log(f"binary id: {binary_id}")
 
-    print("fetching decompiler names")
+    log("fetching decompiler names")
     response = requests.get("https://dogbolt.org/")
     decompilers_json = json.loads(
         response.text.split(
@@ -82,13 +84,13 @@ def main(file_path):
     )
     decompilers_names = list(decompilers_json.keys())
     decompilers_count = len(decompilers_names)
-    print(f"decompiler names: {', '.join(decompilers_names)}")
+    log(f"decompiler names: {', '.join(decompilers_names)}")
 
     done_decompiler_keys = set()
     request_count_by_decompiler_key = {}
 
     for retry_step in range(RETRY_COUNT):
-        print("fetching results...")
+        log("fetching results...")
         response = requests.get(
             f"https://dogbolt.org/api/binaries/{binary_id}/decompilations/?completed=true"
         )
@@ -123,12 +125,12 @@ def main(file_path):
                     request_count_by_decompiler_key.get(decompiler_key, 0)
                     >= REQUESTS_PER_DECOMPILER
                 ):
-                    print(f"error: timeout from decompiler {decompiler_key}")
+                    log(f"error: timeout from decompiler {decompiler_key}")
                     continue
                 request_count_by_decompiler_key[decompiler_key] = (
                     request_count_by_decompiler_key.get(decompiler_key, 0) + 1
                 )
-                print(
+                log(
                     f"error: timeout from decompiler {decompiler_key} - retrying (done {request_count_by_decompiler_key[decompiler_key]} of {REQUESTS_PER_DECOMPILER} requests)"
                 )
                 rerun_response = requests.post(
@@ -136,7 +138,7 @@ def main(file_path):
                 )
                 continue
             elif error:
-                print(f"error: {decompiler_name}-{decompiler_version}")
+                log(f"error: {decompiler_name}-{decompiler_version}")
                 if WRITE_ERROR_TXT:
                     with open(
                         os.path.join(
@@ -149,24 +151,25 @@ def main(file_path):
                 continue
 
             download_url = result["download_url"]
-            print(f"writing {output_path}")
+            log(f"writing {output_path}")
             with open(output_path, "wb") as f:
                 f.write(requests.get(download_url).content)
 
             done_decompiler_keys.add(decompiler_key)
 
         if len(done_decompiler_keys) == decompilers_count:
-            print("fetched all results")
+            log("fetched all results")
             break
 
-        print(
+        log(
             f"fetched {len(done_decompiler_keys)} of {decompilers_count} results. retrying in {RETRY_SLEEP} seconds"
         )
         time.sleep(RETRY_SLEEP)
 
-    print("The process is complete.")
+    log("The process is complete.")
 
 
 if __name__ == "__main__":
-    file_path = input("Введите путь к файлу: ")
+    logging.basicConfig(level=logging.INFO)
+    file_path = input("Enter the path to the file: ")
     main(file_path)
