@@ -37,4 +37,5 @@ fetched all results
 
 ## Credits
 - Telegram: @itachichrist
+- Github: [itachicoders](github.com/itachicoders)
 - The code was borrowed from [github.com/milahu/dogbolt-cli-client-bash](https://github.com/milahu/dogbolt-cli-client-bash)
