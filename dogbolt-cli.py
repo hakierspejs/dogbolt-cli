@@ -26,7 +26,7 @@ decompiler_name_map = {
 file_path = input("Введите путь к файлу: ")
 
 if not file_path or not os.path.isfile(file_path):
-    print("Ошибка: укажите верный путь к файлу")
+    print("Error: Please provide a valid path to the file")
     exit(1)
 
 print(f"binary path: {file_path}")
@@ -131,4 +131,4 @@ for retry_step in range(RETRY_COUNT):
     print(f"fetched {len(done_decompiler_keys)} of {decompilers_count} results. retrying in {RETRY_SLEEP} seconds")
     time.sleep(RETRY_SLEEP)
 
-print("Процесс завершен.")
+print("The process is complete.")
