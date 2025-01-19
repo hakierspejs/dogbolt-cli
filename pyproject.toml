@@ -24,11 +24,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dogbolt-cli"
-version = "0.1.0"
+version = "0.1.1"
 description = "A CLI for Dogbolt. Uploads your binary and downloads decompiled source code."
 authors = [
-    { name = "Jacek Wielemborek", email = "gh@d33.pl" },
-    { name = "itachichrist", email = "itachichrist@gmail.com" }
+    { name = "itachichrist", email = "itachichrist@gmail.com" },
+    { name = "Jacek Wielemborek", email = "gh@d33.pl" }
 ]
 license = {text = "MIT"}
 readme = "README.md"
